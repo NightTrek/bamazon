@@ -24,6 +24,10 @@ const getConnection = async function () {
     });
 }
 
+const ItemCon = function(id, name ){
+    
+}
+
 const displayItemsForSale = async function (con) {
     try {
         const response = await con.query(`SELECT * FROM products`);
@@ -53,6 +57,9 @@ const displayItemsForSale = async function (con) {
                 name: "options"
             }
         ])// end of await
+
+
+        console.log(response)
         }
         catch(err){
             console.log(err)

@@ -40,7 +40,7 @@ const DisplayItemsForSale = async function(con){
                 let ItemArray = [];
                 for (key in response[0]) {
                     console.log(`id: ${response[0][key].item_id} || Product Name: ${response[0][key].product_name} || Department: ${response[0][key].department} || Price: ${response[0][key].price} || quantity: ${response[0][key].quantity}`) 
-                    console.log('------------------------------------------------------------------------------------')
+                    console.log('------------------------------------------------------------------------------------');
                     ItemArray.push({id:response[0][key].item_id,Product_name:response[0][key].product_name, Department:response[0][key].department, price:response[0][key].price, quantity:response[0][key].quantity});
                 }
                resolve(ItemArray); 
@@ -102,6 +102,33 @@ return new Promise((resolve, reject) => {
     catch(err){
         throw err;
     }
+}
+
+const orderAgain = async function(){
+    try{
+        let response = await E.prompt([
+            {
+                type: "Confirm",
+                message: "do you wish to make another order",
+                name: "order" 
+            }            
+    ]);// end of await
+    return new Promise((resolve, reject) => {
+        if(response !== null) {
+           resolve(response); 
+        } else {
+           const errorObject = {
+              msg: 'An error occured displaying items',
+              error, //...some error we got back
+           }
+           reject(errorObject);
+        }
+     });
+        }
+        catch(err){
+            throw err;
+        }
+
 }
 
 const CheckIfOrderIsValid = async function(orders, itemArray){
@@ -177,29 +204,49 @@ return false;
     }
  }
 
-const interfaceStart = async function () {
-    const con = await GetConnection()
-    const ItemArray = await DisplayItemsForSale(con)
-    const customerOrder = await getCustomerOrder();
-    console.log(customerOrder);
+ const handleOrder = async function(con, customerOrder, ItemArray){
     if(CheckIfOrderIsValid(customerOrder, ItemArray)){
         for(key in customerOrder){
             let transaction = await checkForInventory(con,customerOrder[key]);
-            console.log(transaction)
+            // console.log(transaction)
             if(transaction[0].quantity >= customerOrder[key].amount){
                 console.log("successfull transaction");
+                let newInventoryAmount = (transaction[0].quantity-customerOrder[key].amount);
+                try{
+                let response = await UpdateInventory(con, customerOrder[key].ID, newInventoryAmount);
+                customerOrder[key]['msg'] = 'order successfull inventory removed';
+                }
+                catch(err){
+                    console.log('error unable to udpate inventory')
+                    throw err;
+                }
             }
             else{
                 console.log("insuficent inventory to complete transaction")
+                customerOrder[key]['msg'] = "insuficent inventory to complete transaction";
             }
+            console.log(`id: ${customerOrder[key].ID} || amount ordered: ${customerOrder[key].amount} || message: ${customerOrder[key]['msg']}`) 
+            console.log('------------------------------------------------------------------------------------');
         }
     }
     else{
         customerOrder["msg"] = "Not valid transaction item ID is not an item"
     }
+    return
+ }
+
+const interfaceStart = async function () {
+    const con = await GetConnection()
+    let ItemArray = await DisplayItemsForSale(con)
+    const customerOrder = await getCustomerOrder();
+    console.log(customerOrder);
     
+    if(await orderAgain()){
+        let ItemArray = await DisplayItemsForSale(con)
+        let customerOrder = await getCustomerOrder();
+    }
     
-   
+   //itemArray = await DisplayItemsForSale(con)
     
   
 }

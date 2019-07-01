@@ -33,7 +33,7 @@ catch(err){
 
 const DisplayItemsForSale = async function(con){
     try{
-        const response = await con.query(`SELECT * FROM products`);
+        let response = await con.query(`SELECT * FROM products`);
 
         return new Promise((resolve, reject) => {
             if(response) {
@@ -104,17 +104,17 @@ return new Promise((resolve, reject) => {
     }
 }
 
-const CheckIfOrderIsValid = async function(con, order, itemArray){
-    for(key in order){
-        if(isValidItem(order[key], itemArray)){
-
+const CheckIfOrderIsValid = async function(orders, itemArray){
+    for(key in orders){
+        if(isValidItem(orders[key], itemArray) !== true){
+            return false;
         }
     }
+    return true;
 }
-
 const isValidItem = function(item, itemArray){
     for(let i =0;i<itemArray.length;i++){
-    if(item.ID === ItemArray[i].id){
+    if(item.ID === itemArray[i].id){
         return true;
     }
 }
@@ -122,11 +122,83 @@ return false;
 
 }
 
+ const checkForInventory = async function(con, order){
+    try{
+        let response = await con.query(`SELECT * FROM products WHERE item_id = "${order.ID}"`);
+        return new Promise((resolve, reject) => {
+            if(response) {
+                console.log("inventory response")
+                
+
+               resolve(response[0]); 
+            } else {
+               const errorObject = {
+                  msg: 'An error occured displaying items',
+                  error, //...some error we got back
+               }
+               reject(errorObject);
+            }
+         });
+    }
+    catch(err){
+        console.log("checkforINventory failed")
+        throw err;
+    }
+ }
+
+ const UpdateInventory = async function(con, id, newInventory){
+     try{
+     let response = await con.query("UPDATE products SET ? WHERE ?",
+     [
+       {
+         quantity: newInventory
+       },
+       {
+        item_id: id
+       }
+     ]);
+
+     return new Promise((resolve, reject) => {
+        if(response) {
+            console.log("inventory updated")
+           resolve(response[0]); 
+        } else {
+           const errorObject = {
+              msg: 'An error occured displaying items',
+              error, //...some error we got back
+           }
+           reject(errorObject);
+        }
+     });
+
+    }
+    catch(err){
+        throw err;
+    }
+ }
+
 const interfaceStart = async function () {
     const con = await GetConnection()
     const ItemArray = await DisplayItemsForSale(con)
     const customerOrder = await getCustomerOrder();
     console.log(customerOrder);
+    if(CheckIfOrderIsValid(customerOrder, ItemArray)){
+        for(key in customerOrder){
+            let transaction = await checkForInventory(con,customerOrder[key]);
+            console.log(transaction)
+            if(transaction[0].quantity >= customerOrder[key].amount){
+                console.log("successfull transaction");
+            }
+            else{
+                console.log("insuficent inventory to complete transaction")
+            }
+        }
+    }
+    else{
+        customerOrder["msg"] = "Not valid transaction item ID is not an item"
+    }
+    
+    
    
     
   

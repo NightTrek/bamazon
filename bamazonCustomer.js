@@ -232,7 +232,17 @@ return false;
     else{
         customerOrder["msg"] = "Not valid transaction item ID is not an item"
     }
-    return
+    return new Promise((resolve, reject) => {
+        if(customerOrder) {
+           resolve(customerOrder); 
+        } else {
+           const errorObject = {
+              msg: 'An error occured Handling your order',
+              error, //...some error we got back
+           }
+           reject(errorObject);
+        }
+     });
  }
 
 const interfaceStart = async function () {
@@ -240,13 +250,17 @@ const interfaceStart = async function () {
     let ItemArray = await DisplayItemsForSale(con)
     const customerOrder = await getCustomerOrder();
     console.log(customerOrder);
-    
-    if(await orderAgain()){
-        let ItemArray = await DisplayItemsForSale(con)
-        let customerOrder = await getCustomerOrder();
+    let response = await handleOrder(con, customerOrder, ItemArray);
+    let orderagain = await orderAgain();
+    if(orderagain.order === true){
+        interfaceStart()
+    }
+    else{
+        console.log('Thank you for your purchase')
+        return;
     }
     
-   //itemArray = await DisplayItemsForSale(con)
+   
     
   
 }

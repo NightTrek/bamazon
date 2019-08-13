@@ -13,6 +13,28 @@ After completion a list of items and weather they are successfully purchased or 
 The interface will than ask if you wish to buy more goods. if yes it will run the interface again recursivly or
 it will end the program.
 
+Step 1
+
+![image of inventory](img/bamazon2.png)
+
+
+Step 2:
+
+![image of purchase ammounts](img/bamazon3.png)
+
+Step 3:
+
+![image of inventory response](img/bamazon4.png)
+
+Step 4:
+
+![image of inventory](img/bamazon5.png)
+
+Step 5:
+After getting to step 4 the program asks you if you wish to continue. The user can respond with either Y or N to stop.
+
+
+
 Pretty basic no thrills or fancy stuff just made it work.
 5/10 difficulty 
 6/10 usefullness
